@@ -2,10 +2,16 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+)
+
+var (
+	err              = errors.New("неправильный формат введенных данных")
+	errRomanNegative = errors.New("Римские числа не могут быть отрицательными,или равными нулю")
 )
 
 func main() {
@@ -16,30 +22,38 @@ func main() {
 		input = strings.TrimSpace(input)
 		parts := strings.Split(input, " ")
 		if len(parts) != 3 {
-			fmt.Println("Неправильный формат введенных данных")
+			fmt.Println("", err)
 			continue
 		}
 		numeralsOne := parts[0]
 		operation := parts[1]
 		numeralsTwo := parts[2]
-		answer := numeralsRoman(numeralsOne, operation, numeralsTwo)
-		if answer == "Ошибка" {
-			fmt.Println("Неправильный формат введенных данных")
-			continue
-		} else if answer == "Не римские цифры" {
-			if numeralsArabic(numeralsOne, operation, numeralsTwo) == 100 {
-				fmt.Println("Неправильный формат введенных данных")
-				continue
-			} else {
-				fmt.Println(numeralsArabic(numeralsOne, operation, numeralsTwo))
-			}
+		answer, errAnswer := numeralsRoman(numeralsOne, operation, numeralsTwo)
+		if errAnswer != nil {
+			fmt.Println("", err)
+			break
 		} else {
-			fmt.Println(answer)
+			if answer == "Арабские цифры" {
+				answerArabic, errArabic := numeralsArabic(numeralsOne, operation, numeralsTwo)
+				if errArabic != nil {
+					fmt.Println("", err)
+					break
+				} else {
+					fmt.Println(answerArabic)
+				}
+			} else {
+				fmt.Println(answer)
+			}
 		}
 	}
 }
-func numeralsRoman(numeralsOne, operation, numeralsTwo string) string {
-	romanNumerals := [21]string{"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX"}
+
+func numeralsRoman(numeralsOne, operation, numeralsTwo string) (string, error) {
+	romanNumerals := [21]string{
+		"", "I", "II", "III", "IV", "V",
+		"VI", "VII", "VIII", "IX", "X",
+		"XI", "XII", "XIII", "XIV", "XV",
+		"XVI", "XVII", "XVIII", "XIX", "XX"}
 	var x, y int
 	for i := 1; i <= 10; i++ {
 		if romanNumerals[i] == numeralsOne {
@@ -54,41 +68,55 @@ func numeralsRoman(numeralsOne, operation, numeralsTwo string) string {
 		}
 	}
 	if x != 0 && y != 0 {
-		switch operation {
-		case "+":
-			return romanNumerals[amount(x, y)]
-		case "-":
-			return romanNumerals[subtraction(x, y)]
-		case "*":
-			return romanNumerals[multiply(x, y)]
-		case "/":
-			return romanNumerals[division(x, y)]
+		if x >= 1 && y >= 1 {
+			switch operation {
+			case "+":
+				return romanNumerals[amount(x, y)], nil
+			case "-":
+				if subtraction(x, y) > 0 {
+					return romanNumerals[subtraction(x, y)], nil
+				} else {
+					return "", errRomanNegative
+				}
+			case "*":
+				return romanNumerals[multiply(x, y)], nil
+			case "/":
+				return romanNumerals[division(x, y)], nil
+			}
+		} else {
+			return "", err
 		}
 	} else if x == 0 && y == 0 {
-		return "Не римские цифры"
+		return "Арабские цифры", nil
 	} else {
-		return "Ошибка"
+		return "", err
 	}
-	return ""
+	return "", err
 }
-func numeralsArabic(x, operation, y string) int {
-	a, _ := strconv.Atoi(x)
-	b, _ := strconv.Atoi(y)
+func numeralsArabic(x, operation, y string) (int, error) {
+	a, errIntOne := strconv.Atoi(x)
+	if errIntOne != nil {
+		return 0, err
+	}
+	b, errIntTwo := strconv.Atoi(y)
+	if errIntTwo != nil {
+		return 0, err
+	}
 	if a <= 10 && b <= 10 {
 		switch operation {
 		case "+":
-			return amount(a, b)
+			return amount(a, b), nil
 		case "-":
-			return subtraction(a, b)
+			return subtraction(a, b), nil
 		case "*":
-			return multiply(a, b)
+			return multiply(a, b), nil
 		case "/":
-			return division(a, b)
+			return division(a, b), nil
 		}
 	} else {
-		return 100
+		return 0, err
 	}
-	return 100
+	return 0, err
 }
 func amount(x, y int) int {
 	return x + y
