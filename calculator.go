@@ -11,7 +11,7 @@ import (
 
 var (
 	err              = errors.New("неправильный формат введенных данных")
-	errRomanNegative = errors.New("Римские числа не могут быть отрицательными,или равными нулю")
+	errRomanNegative = errors.New("римские числа не могут быть отрицательными,или равными нулю")
 )
 
 func main() {
